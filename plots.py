@@ -2,7 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
-
+from shapely.geometry import Point
+import geopandas as gpd
 
 def load_data():
     data = pd.read_csv('./daneprojekt/Crime_Data_2010_2017.csv')
@@ -223,6 +224,72 @@ def crimesline(dane, plec, narod, wiek, crimes):
     plt.ylim(bottom=0)
 
     return plt.gcf()
+
+
+
+def geo_crime(df, crime_type):
+    crime_data = df[df['Crime Code Description'] == crime_type]
+    crime_data = crime_data.dropna(subset=['Location '])
+    
+    crime_data['Latitude'] = crime_data['Location '].apply(lambda loc: float(loc.split(',')[0].strip()[1:]) if isinstance(loc, str) else None)
+    crime_data['Longitude'] = crime_data['Location '].apply(lambda loc: float(loc.split(',')[1].strip()[:-1]) if isinstance(loc, str) else None)
+    
+    crime_data = crime_data.dropna(subset=['Latitude', 'Longitude'])
+    
+    geometry = [Point(xy) for xy in zip(crime_data['Longitude'], crime_data['Latitude'])]
+    gdf = gpd.GeoDataFrame(crime_data, geometry=geometry, crs='epsg:4326')
+    
+    world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    cities = gpd.read_file(gpd.datasets.get_path('naturalearth_cities'))
+    
+    # Load Los Angeles city boundaries
+    city_boundaries = gpd.read_file('./City_Boundaries/City_Boundaries.shp')
+    
+    world = world.to_crs(epsg=4326)
+    cities = cities.to_crs(epsg=4326)
+    city_boundaries = city_boundaries.to_crs(epsg=4326)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # Plotting world map
+    world.plot(ax=ax, color='lightgrey')
+    
+    # Plotting Los Angeles city boundaries
+    city_boundaries.plot(ax=ax, color='none', edgecolor='blue', linewidth=2)
+    
+    # Plotting crime data
+    gdf.plot(ax=ax, marker='o', color='crimson', markersize=5, alpha=0.1)
+    
+    ax.set_title(f'Mapa natężenia {crime_type}')
+    ax.set_xlim([-118.97, -117.63])
+    ax.set_ylim([33.65, 34.85])
+    
+    return plt.gcf()
+
+
+
+
+def percentage(dane, crimes_filter):
+    filtered_data = dane[dane['Crime Code Description'] == crimes_filter]
+    crimes_count = len(filtered_data)
+    total_crimes = len(dane)
+    if total_crimes > 0:
+        percentage = (crimes_count / total_crimes) * 100
+    else:
+        percentage = 0.00
+    return percentage
+
+
+
+
+def area(dane, crimes_filter):
+    filtered_data = dane[dane['Crime Code Description'] == crimes_filter]
+    if filtered_data.empty:
+        return None  # Jeśli nie ma danych dla danego przestępstwa, zwróć None lub możesz obsłużyć inaczej
+
+    most_common_area = filtered_data['Area Name'].mode().iloc[0]
+    return most_common_area
+
 
 # hours(load_data(), ['M', 'F'],['B', 'W'],(29, 33))
 # months(load_data(), ['M', 'F'],['B', 'W'],(29, 33))

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from plots import load_data, months, days, hours, allthetime, crimesline
+from plots import load_data, months, days, hours, allthetime, crimesline, geo_crime, percentage, area
 import plotly.express as px
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
@@ -175,7 +175,17 @@ elif st.session_state.button_clicked == 'wykresy':
                     st.write(", ".join(rasy[i:i+4]))
             
         elif st.session_state.genre == "***Geolokacja***":
-            st.write("Mapy natężeń top 5 przestępstw czy coś")
+            crimes_unique = dane['Crime Code Description'].unique()
+            crimes_filter = st.sidebar.selectbox("Przestępstwo:",crimes_unique)
+
+            prc = percentage(dane,crimes_filter)
+            area_n = area(dane, crimes_filter)
+            st.write(f"{crimes_filter} stanowi: {prc:.2f}% wszystkich przestępstw.")
+            st.write(f"Najniebezpieczniejszą dzielnicą pod względem tego przestępstwa jest: {area_n}")
+
+            result = geo_crime(dane, crimes_filter)
+            st.pyplot(result)
+            
 
 #WSZĘDZIE MOŻESZ DODAĆ st.sidebar.selectbox CZY COŚ ŻEBY TO MIAŁO RĘCE I NOGI
 #np. DLA MIESIĘCY... DLA POSZCZEGÓLNEGO PRZESTĘPSTWA - TAK SAMO PŁEĆ ITD
