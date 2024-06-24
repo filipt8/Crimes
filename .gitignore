@@ -1,8 +1,5 @@
-ttteee.py
-uuu.py
-test.py
-test2.py
-test4.py
+preprocessor_crimes_10k_2.pkl
+random_forest_model_crimes_10k_2.pkl
 
 /City_Boundaries/City_Boundaries.cpg
 /City_Boundaries/City_Boundaries.dbf

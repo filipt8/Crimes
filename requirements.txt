@@ -1,0 +1,9 @@
+numpy
+pandas
+streamlit
+joblib
+matplotlib
+plotly.express
+seaborn
+shapely
+geopandas
